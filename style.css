@@ -1,30 +1,224 @@
-body {
-  font-family: Arial, sans-serif;
-  margin: 30px;
+/* --- Resets & Basic Setup --- */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  line-height: 1.6;
+  background-color: #f4f4f4;
+  color: #333;
+  padding: 20px;
+}
+
+.container {
+  max-width: 960px;
+  margin: auto;
+  overflow: hidden; /* Clears floats if any, not strictly needed here */
+  padding: 0 15px;
+}
+
 h1, h2 {
   color: #333;
+  margin-bottom: 10px;
+  text-align: center;
 }
+h1 {
+  margin-bottom: 30px;
+  color: #0056b3; /* A primary color */
+  font-size: 2.5em;
+}
+h2 {
+  color: #007bff; /* Slightly different color for meal headings */
+  border-bottom: 2px solid #007bff;
+  padding-bottom: 5px;
+  margin-top: 30px; /* More space above meal titles */
+  font-size: 1.8em;
+}
+
+/* --- Loading & Error Indicators --- */
+#loading-indicator {
+  text-align: center;
+  padding: 10px;
+  color: #007bff;
+  font-style: italic;
+  margin-bottom: 15px;
+}
+#error-message {
+  text-align: center;
+  padding: 10px;
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+  margin-bottom: 15px;
+}
+
+/* --- Meal Sections --- */
 .meal {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1); /* Slightly more pronounced shadow */
+  padding: 20px;
   margin-bottom: 30px;
 }
-input {
-  margin-right: 10px;
+
+.meal-input-area {
+  display: flex;
+  align-items: center; /* Vertically align items */
+  margin-bottom: 20px; /* More space below input area */
+  gap: 10px; /* Space between input elements */
 }
+
+.quantity-input {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1em;
+  width: 70px; /* Fixed width for quantity */
+  text-align: center;
+}
+
+.food-input {
+  flex-grow: 1;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1em;
+}
+
+button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1em;
+  transition: background-color 0.3s ease;
+  white-space: nowrap; /* Prevent button text from wrapping */
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+.delete-item-btn {
+  background-color: #dc3545;
+  padding: 6px 10px;
+  font-size: 0.9em;
+}
+.delete-item-btn:hover {
+  background-color: #c82333;
+}
+
+#reset-day-button {
+    display: block; /* Make it a block to center it */
+    margin: 30px auto 20px auto; /* Center with margins */
+    background-color: #6c757d; /* A neutral or secondary color */
+    padding: 12px 25px;
+}
+#reset-day-button:hover {
+    background-color: #5a6268;
+}
+
+/* --- Tables --- */
+.table-responsive-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+  margin-top: 15px; /* Added margin top */
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 10px;
+  min-width: 650px; /* Ensure table has a minimum width for scrolling */
 }
+
 th, td {
-  border: 1px solid #ccc;
-  padding: 8px;
-  text-align: center;
+  border: 1px solid #e0e0e0; /* Slightly lighter border */
+  padding: 12px; /* More padding */
+  text-align: left;
 }
-th {
-  background-color: #f0f0f0;
+/* Right-align numeric columns and action column */
+th:nth-child(n+2),
+td:nth-child(n+2) {
+  text-align: right;
 }
-.totals, #overall {
+/* Center action column content */
+th:last-child,
+td:last-child {
+    text-align: center;
+}
+
+
+thead th {
+  background-color: #e9ecef;
+  color: #495057;
+  font-weight: 600; /* Slightly bolder */
+}
+
+tbody tr:nth-child(even) {
+  background-color: #f8f9fa;
+}
+tbody tr:hover {
+    background-color: #f1f1f1; /* Hover effect for rows */
+}
+
+tfoot .totals td, #overall-totals-row td {
   font-weight: bold;
-  background-color: #f9f9f9;
+  background-color: #d1ecf1;
+  color: #0c5460;
+}
+
+
+/* --- Responsive Design --- */
+@media (max-width: 768px) {
+  body {
+    padding: 10px;
+  }
+  .container {
+    padding: 0 10px;
+  }
+  h1 { font-size: 2em; }
+  h2 { font-size: 1.5em; }
+
+  .meal-input-area {
+    flex-direction: column;
+    align-items: stretch; /* Make items full width */
+  }
+  .quantity-input {
+      width: 100%; /* Full width on small screens */
+      margin-bottom: 10px;
+  }
+  .food-input {
+    margin-right: 0;
+    margin-bottom: 10px;
+  }
+  button {
+    width: 100%;
+  }
+  table {
+    min-width: 600px; /* Adjust as needed */
+  }
+  th, td {
+      padding: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  h1 { font-size: 1.8em; }
+  h2 { font-size: 1.3em; }
+  th, td {
+    padding: 8px;
+    font-size: 0.9em;
+  }
+  table {
+    min-width: 500px; /* Further adjust for very small screens */
+  }
+  .meal-input-area {
+      gap: 8px;
+  }
 }
