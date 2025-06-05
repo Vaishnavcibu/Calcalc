@@ -1,130 +1,558 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Calorie Tracker</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Powered Calorie & Nutrition Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-left-color: #ffffff;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .table-cell-label { display: none; }
+        @media (max-width: 768px) {
+            table thead { display: none; }
+            table tbody tr {
+                display: block;
+                margin-bottom: 1rem;
+                border: 1px solid #e5e7eb;
+                border-radius: 0.375rem;
+                padding: 0.5rem;
+            }
+            table tbody td {
+                display: block;
+                text-align: right;
+                padding-left: 50%;
+                position: relative;
+                font-size: 0.875rem;
+            }
+            table tbody td .table-cell-label {
+                display: inline-block;
+                position: absolute;
+                left: 0.5rem;
+                font-weight: 600;
+                color: #4b5563;
+            }
+            table tbody td:last-child { padding-bottom: 0.5rem; }
+        }
+    </style>
 </head>
-<body>
-  <h1>Calorie Tracker</h1>
+<body class="bg-gradient-to-br from-indigo-100 to-purple-200 min-h-screen py-8 px-4">
+    <div class="container mx-auto max-w-4xl">
+        <header class="text-center mb-10">
+            <h1 class="text-4xl md:text-5xl font-extrabold text-indigo-700">
+                AI Nutrition Tracker
+            </h1>
+            <p class="text-gray-600 mt-2 text-lg">
+                Track your meals with intelligent nutrition lookup by Gemini.
+            </p>
+        </header>
 
-  <div class="container">
-    <div id="loading-indicator" style="display:none;">Fetching data...</div>
-    <div id="error-message" style="display:none;"></div>
+        <!-- API Key Input - CRITICAL WARNING -->
+        <div class="mb-8 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 rounded-md shadow">
+            <h3 class="font-bold text-lg">Important: API Key</h3>
+            <p class="text-sm">
+                Enter your Google Gemini API Key below.
+                <strong>WARNING:</strong> This key will be used directly in your browser and is visible in the code.
+                For personal use/testing only. Do NOT deploy this publicly with a real API key.
+            </p>
+            <input type="password" id="apiKeyInput" placeholder="Enter your Gemini API Key"
+                   class="mt-2 w-full p-2 border border-yellow-400 rounded-md focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500">
+            <button id="saveApiKeyButton" class="mt-2 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded-md text-sm">
+                Save Key
+            </button>
+        </div>
 
-    <div id="meals">
-      <!-- Breakfast -->
-      <div class="meal" id="breakfast">
-        <h2>Breakfast</h2>
-        <div class="meal-input-area">
-          <input type="number" class="quantity-input" value="1" min="1" title="Quantity">
-          <input type="text" placeholder="Enter food item" class="food-input">
-          <button data-meal="breakfast">Add</button>
-        </div>
-        <div class="table-responsive-wrapper">
-          <table>
-            <thead>
-              <tr><th>Food</th><th>Calories</th><th>Protein (g)</th><th>Carbs (g)</th><th>Fat (g)</th><th>Sugar (g)</th><th>Action</th></tr>
-            </thead>
-            <tbody></tbody>
-            <tfoot>
-              <tr class="totals">
-                <td>Total</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td></td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-      </div>
+        <div id="trackerApp" class="hidden">
+            <!-- Meal Sections -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+                <!-- Breakfast -->
+                <div class="meal-section bg-white p-6 rounded-xl shadow-lg" id="breakfast">
+                    <h2 class="text-2xl font-bold text-indigo-600 mb-4">Breakfast</h2>
+                    <div class="flex gap-2 mb-4">
+                        <input type="text" class="food-input flex-grow p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500" placeholder="e.g., 2 idlis with sambar">
+                        <button class="add-food-btn bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-5 rounded-lg flex items-center justify-center">
+                            <span class="button-text">Add</span>
+                            <div class="spinner hidden ml-2"></div>
+                        </button>
+                    </div>
+                    <div class="table-container overflow-x-auto">
+                        <table class="w-full text-sm text-left text-gray-700">
+                            <thead class="text-xs text-gray-700 uppercase bg-gray-100">
+                                <tr>
+                                    <th scope="col" class="px-4 py-3">Food</th>
+                                    <th scope="col" class="px-4 py-3 text-right">Cal</th>
+                                    <th scope="col" class="px-4 py-3 text-right">P(g)</th>
+                                    <th scope="col" class="px-4 py-3 text-right">C(g)</th>
+                                    <th scope="col" class="px-4 py-3 text-right">F(g)</th>
+                                    <th scope="col" class="px-4 py-3 text-right">S(g)</th>
+                                    <th scope="col" class="px-4 py-3 text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody> <!-- Items will be added here --> </tbody>
+                            <tfoot class="font-semibold text-gray-800 bg-gray-50">
+                                <tr class="totals-row">
+                                    <td class="px-4 py-2">Total</td>
+                                    <td class="px-4 py-2 text-right">0</td>
+                                    <td class="px-4 py-2 text-right">0</td>
+                                    <td class="px-4 py-2 text-right">0</td>
+                                    <td class="px-4 py-2 text-right">0</td>
+                                    <td class="px-4 py-2 text-right">0</td>
+                                    <td class="px-4 py-2"></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
 
-      <!-- Lunch -->
-      <div class="meal" id="lunch">
-        <h2>Lunch</h2>
-        <div class="meal-input-area">
-          <input type="number" class="quantity-input" value="1" min="1" title="Quantity">
-          <input type="text" placeholder="Enter food item" class="food-input">
-          <button data-meal="lunch">Add</button>
-        </div>
-        <div class="table-responsive-wrapper">
-          <table>
-            <thead>
-              <tr><th>Food</th><th>Calories</th><th>Protein (g)</th><th>Carbs (g)</th><th>Fat (g)</th><th>Sugar (g)</th><th>Action</th></tr>
-            </thead>
-            <tbody></tbody>
-            <tfoot>
-              <tr class="totals">
-                <td>Total</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td></td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-      </div>
+                <!-- Lunch (similar structure) -->
+                <div class="meal-section bg-white p-6 rounded-xl shadow-lg" id="lunch">
+                    <h2 class="text-2xl font-bold text-green-600 mb-4">Lunch</h2>
+                     <div class="flex gap-2 mb-4">
+                        <input type="text" class="food-input flex-grow p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" placeholder="e.g., 1 cup rice with dal">
+                        <button class="add-food-btn bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-5 rounded-lg flex items-center justify-center">
+                            <span class="button-text">Add</span>
+                            <div class="spinner hidden ml-2"></div>
+                        </button>
+                    </div>
+                    <div class="table-container overflow-x-auto">
+                        <table class="w-full text-sm text-left text-gray-700">
+                            <thead class="text-xs text-gray-700 uppercase bg-gray-100">
+                                <tr><th scope="col" class="px-4 py-3">Food</th><th scope="col" class="px-4 py-3 text-right">Cal</th><th scope="col" class="px-4 py-3 text-right">P(g)</th><th scope="col" class="px-4 py-3 text-right">C(g)</th><th scope="col" class="px-4 py-3 text-right">F(g)</th><th scope="col" class="px-4 py-3 text-right">S(g)</th><th scope="col" class="px-4 py-3 text-center">Action</th></tr>
+                            </thead>
+                            <tbody></tbody>
+                            <tfoot class="font-semibold text-gray-800 bg-gray-50"><tr class="totals-row"><td class="px-4 py-2">Total</td><td class="px-4 py-2 text-right">0</td><td class="px-4 py-2 text-right">0</td><td class="px-4 py-2 text-right">0</td><td class="px-4 py-2 text-right">0</td><td class="px-4 py-2 text-right">0</td><td class="px-4 py-2"></td></tr></tfoot>
+                        </table>
+                    </div>
+                </div>
 
-      <!-- Snacks -->
-      <div class="meal" id="snacks">
-        <h2>Snacks</h2>
-        <div class="meal-input-area">
-          <input type="number" class="quantity-input" value="1" min="1" title="Quantity">
-          <input type="text" placeholder="Enter food item" class="food-input">
-          <button data-meal="snacks">Add</button>
-        </div>
-        <div class="table-responsive-wrapper">
-          <table>
-            <thead>
-              <tr><th>Food</th><th>Calories</th><th>Protein (g)</th><th>Carbs (g)</th><th>Fat (g)</th><th>Sugar (g)</th><th>Action</th></tr>
-            </thead>
-            <tbody></tbody>
-            <tfoot>
-              <tr class="totals">
-                <td>Total</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td></td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-      </div>
+                <!-- Snacks (similar structure) -->
+                <div class="meal-section bg-white p-6 rounded-xl shadow-lg" id="snacks">
+                    <h2 class="text-2xl font-bold text-yellow-500 mb-4">Snacks</h2>
+                    <div class="flex gap-2 mb-4">
+                        <input type="text" class="food-input flex-grow p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500" placeholder="e.g., 1 banana">
+                        <button class="add-food-btn bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-3 px-5 rounded-lg flex items-center justify-center">
+                            <span class="button-text">Add</span>
+                            <div class="spinner hidden ml-2"></div>
+                        </button>
+                    </div>
+                    <div class="table-container overflow-x-auto">
+                       <table class="w-full text-sm text-left text-gray-700">
+                            <thead class="text-xs text-gray-700 uppercase bg-gray-100">
+                                <tr><th scope="col" class="px-4 py-3">Food</th><th scope="col" class="px-4 py-3 text-right">Cal</th><th scope="col" class="px-4 py-3 text-right">P(g)</th><th scope="col" class="px-4 py-3 text-right">C(g)</th><th scope="col" class="px-4 py-3 text-right">F(g)</th><th scope="col" class="px-4 py-3 text-right">S(g)</th><th scope="col" class="px-4 py-3 text-center">Action</th></tr>
+                            </thead>
+                            <tbody></tbody>
+                            <tfoot class="font-semibold text-gray-800 bg-gray-50"><tr class="totals-row"><td class="px-4 py-2">Total</td><td class="px-4 py-2 text-right">0</td><td class="px-4 py-2 text-right">0</td><td class="px-4 py-2 text-right">0</td><td class="px-4 py-2 text-right">0</td><td class="px-4 py-2 text-right">0</td><td class="px-4 py-2"></td></tr></tfoot>
+                        </table>
+                    </div>
+                </div>
 
-      <!-- Dinner -->
-      <div class="meal" id="dinner">
-        <h2>Dinner</h2>
-        <div class="meal-input-area">
-          <input type="number" class="quantity-input" value="1" min="1" title="Quantity">
-          <input type="text" placeholder="Enter food item" class="food-input">
-          <button data-meal="dinner">Add</button>
-        </div>
-        <div class="table-responsive-wrapper">
-          <table>
-            <thead>
-              <tr><th>Food</th><th>Calories</th><th>Protein (g)</th><th>Carbs (g)</th><th>Fat (g)</th><th>Sugar (g)</th><th>Action</th></tr>
-            </thead>
-            <tbody></tbody>
-            <tfoot>
-              <tr class="totals">
-                <td>Total</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td></td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-      </div>
+                <!-- Dinner (similar structure) -->
+                <div class="meal-section bg-white p-6 rounded-xl shadow-lg" id="dinner">
+                    <h2 class="text-2xl font-bold text-red-500 mb-4">Dinner</h2>
+                    <div class="flex gap-2 mb-4">
+                        <input type="text" class="food-input flex-grow p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500" placeholder="e.g., 2 porotas with chicken curry">
+                        <button class="add-food-btn bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-5 rounded-lg flex items-center justify-center">
+                            <span class="button-text">Add</span>
+                            <div class="spinner hidden ml-2"></div>
+                        </button>
+                    </div>
+                    <div class="table-container overflow-x-auto">
+                        <table class="w-full text-sm text-left text-gray-700">
+                            <thead class="text-xs text-gray-700 uppercase bg-gray-100">
+                                <tr><th scope="col" class="px-4 py-3">Food</th><th scope="col" class="px-4 py-3 text-right">Cal</th><th scope="col" class="px-4 py-3 text-right">P(g)</th><th scope="col" class="px-4 py-3 text-right">C(g)</th><th scope="col" class="px-4 py-3 text-right">F(g)</th><th scope="col" class="px-4 py-3 text-right">S(g)</th><th scope="col" class="px-4 py-3 text-center">Action</th></tr>
+                            </thead>
+                            <tbody></tbody>
+                            <tfoot class="font-semibold text-gray-800 bg-gray-50"><tr class="totals-row"><td class="px-4 py-2">Total</td><td class="px-4 py-2 text-right">0</td><td class="px-4 py-2 text-right">0</td><td class="px-4 py-2 text-right">0</td><td class="px-4 py-2 text-right">0</td><td class="px-4 py-2 text-right">0</td><td class="px-4 py-2"></td></tr></tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Overall Totals -->
+            <div class="bg-white p-6 rounded-xl shadow-lg mb-6">
+                <h2 class="text-3xl font-bold text-purple-700 mb-4 text-center">Daily Summary</h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-md text-gray-800">
+                        <thead class="text-sm text-purple-700 uppercase bg-purple-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-right">Total Calories</th>
+                                <th scope="col" class="px-6 py-3 text-right">Total Protein (g)</th>
+                                <th scope="col" class="px-6 py-3 text-right">Total Carbs (g)</th>
+                                <th scope="col" class="px-6 py-3 text-right">Total Fat (g)</th>
+                                <th scope="col" class="px-6 py-3 text-right">Total Sugar (g)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="font-bold text-lg">
+                            <tr id="overall-totals-row" class="border-b">
+                                <td class="px-6 py-4 text-right">0</td>
+                                <td class="px-6 py-4 text-right">0</td>
+                                <td class="px-6 py-4 text-right">0</td>
+                                <td class="px-6 py-4 text-right">0</td>
+                                <td class="px-6 py-4 text-right">0</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <button id="resetDayButton" class="w-full md:w-auto mx-auto block bg-gray-700 hover:bg-gray-800 text-white font-semibold py-3 px-6 rounded-lg">
+                Reset Day
+            </button>
+        </div> <!-- End of trackerApp -->
+
+        <!-- General Message Area -->
+        <div id="generalMessage" class="mt-6 p-4 text-center text-red-600 bg-red-100 border border-red-400 rounded-md hidden"></div>
     </div>
 
-    <h2>Overall Total</h2>
-    <div class="table-responsive-wrapper">
-      <table>
-        <thead>
-          <tr><th>Calories</th><th>Protein (g)</th><th>Carbs (g)</th><th>Fat (g)</th><th>Sugar (g)</th></tr>
-        </thead>
-        <tbody>
-          <tr id="overall-totals-row">
-            <td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <script>
+        // --- Configuration ---
+        const GEMINI_API_ENDPOINT_BASE = 'https://generativelanguage.googleapis.com/v1beta/models/';
+        // You can change 'gemini-1.5-flash-latest' to 'gemini-pro' or other compatible models
+        const GEMINI_MODEL = 'gemini-1.5-flash-latest'; // Flash is faster and cheaper for this kind of task
+        let GEMINI_API_KEY = ''; // To be set by user
 
-    <button id="reset-day-button">Reset Day</button>
+        const nutrientKeys = ['calories', 'protein_g', 'carbohydrates_total_g', 'fat_total_g', 'sugar_g'];
+        const nutrientDisplayLabels = ['Cal', 'P(g)', 'C(g)', 'F(g)', 'S(g)']; // For mobile table labels
 
-  </div>
+        // --- DOM Elements ---
+        const apiKeyInput = document.getElementById('apiKeyInput');
+        const saveApiKeyButton = document.getElementById('saveApiKeyButton');
+        const trackerAppDiv = document.getElementById('trackerApp');
+        const generalMessageDiv = document.getElementById('generalMessage');
+        const mealSections = document.querySelectorAll('.meal-section');
+        const overallTotalsRow = document.getElementById('overall-totals-row');
+        const resetDayButton = document.getElementById('resetDayButton');
 
-  <script src="script.js"></script>
+        // --- State ---
+        let dailyData = {
+            // breakfast: [], lunch: [], snacks: [], dinner: [] ... meals will be populated dynamically
+        };
+        let dailyTotals = {}; // Will store totals for each meal and overall
+
+        // --- Event Listeners ---
+        saveApiKeyButton.addEventListener('click', () => {
+            const key = apiKeyInput.value.trim();
+            if (key) {
+                GEMINI_API_KEY = key;
+                localStorage.setItem('geminiApiKey', key);
+                trackerAppDiv.classList.remove('hidden');
+                apiKeyInput.parentElement.classList.add('hidden'); // Hide API key input section
+                showMessage("API Key saved. You can now use the tracker.", "success", generalMessageDiv);
+                initializeTracker();
+            } else {
+                showMessage("Please enter a valid API Key.", "error", generalMessageDiv);
+            }
+        });
+
+        mealSections.forEach(section => {
+            const mealId = section.id;
+            dailyData[mealId] = []; // Initialize meal data array
+            dailyTotals[mealId] = Object.fromEntries(nutrientKeys.map(k => [k, 0])); // Initialize meal totals
+
+            const addButton = section.querySelector('.add-food-btn');
+            const foodInput = section.querySelector('.food-input');
+            const spinner = section.querySelector('.spinner');
+            const buttonText = section.querySelector('.button-text');
+
+            addButton.addEventListener('click', async () => {
+                const query = foodInput.value.trim();
+                if (!query) {
+                    showMessage("Please enter a food item.", "error", generalMessageDiv);
+                    return;
+                }
+                if (!GEMINI_API_KEY) {
+                    showMessage("API Key is not set. Please save your API key first.", "error", generalMessageDiv);
+                    return;
+                }
+
+                buttonText.textContent = 'Working...';
+                spinner.classList.remove('hidden');
+                addButton.disabled = true;
+
+                try {
+                    const nutritionData = await fetchNutritionFromGemini(query);
+                    if (nutritionData && !nutritionData.error) {
+                        addFoodToMeal(mealId, { ...nutritionData, query }); // Save original query too
+                        foodInput.value = ''; // Clear input
+                        showMessage(`Added ${nutritionData.food_name || query} to ${mealId}.`, "success", generalMessageDiv);
+                    } else {
+                        let errorMsg = "Could not get nutrition data. ";
+                        if (nutritionData && nutritionData.error_message) errorMsg += nutritionData.error_message;
+                        else if (nutritionData && typeof nutritionData === 'string') errorMsg += nutritionData;
+                        else errorMsg += "The AI might not have understood or found the item. Try being more specific.";
+                        showMessage(errorMsg, "error", generalMessageDiv);
+                    }
+                } catch (error) {
+                    console.error("Error fetching nutrition:", error);
+                    showMessage(`Error: ${error.message}. Check console for details.`, "error", generalMessageDiv);
+                } finally {
+                    buttonText.textContent = 'Add';
+                    spinner.classList.add('hidden');
+                    addButton.disabled = false;
+                }
+            });
+        });
+
+        resetDayButton.addEventListener('click', () => {
+            if (confirm("Are you sure you want to reset all data for the day?")) {
+                localStorage.removeItem('dailyFoodData');
+                initializeTrackerData();
+                renderAllMeals();
+                updateAllTotals();
+                showMessage("Tracker has been reset.", "success", generalMessageDiv);
+            }
+        });
+
+
+        // --- Core Functions ---
+        async function fetchNutritionFromGemini(foodQuery) {
+            const prompt = `
+                You are a helpful nutrition assistant. For the food item "${foodQuery}", provide the estimated nutritional information for a typical or common serving size, unless a quantity is specified in the query.
+                Return the data strictly in the following JSON format:
+                {
+                  "food_name": "The recognized name of the food item",
+                  "calories": Number,
+                  "protein_g": Number,
+                  "carbohydrates_total_g": Number,
+                  "fat_total_g": Number,
+                  "sugar_g": Number
+                }
+                If you cannot find specific data or the query is ambiguous, respond with:
+                {
+                  "error": true,
+                  "error_message": "Could not find specific data for [foodQuery]. Please try being more specific or check spelling."
+                }
+                Ensure all nutrient values are numbers. If a nutrient is not applicable or zero, use 0.
+                Do not include any text outside of the JSON structure.
+            `;
+
+            const requestBody = {
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: {
+                    // responseMimeType: "application/json", // This is ideal but might not be supported by all Gemini models/endpoints directly
+                    temperature: 0.2 // Lower temperature for more factual, less creative responses
+                }
+            };
+
+            try {
+                const response = await fetch(`${GEMINI_API_ENDPOINT_BASE}${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestBody)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error("Gemini API Error Response:", errorData);
+                    throw new Error(`Gemini API request failed: ${response.status} ${response.statusText}. ${errorData.error?.message || ''}`);
+                }
+
+                const data = await response.json();
+
+                if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0].text) {
+                    let textResponse = data.candidates[0].content.parts[0].text;
+                    // Attempt to clean and parse the JSON
+                    try {
+                        // Gemini might sometimes wrap JSON in markdown backticks
+                        textResponse = textResponse.replace(/^```json\s*|```\s*$/g, '').trim();
+                        const jsonData = JSON.parse(textResponse);
+                        // Validate required fields (simple validation)
+                        if (jsonData.error) return jsonData; // Return error object from Gemini as is
+                        if (typeof jsonData.calories !== 'number') throw new Error("Invalid JSON structure: 'calories' missing or not a number.");
+                        return jsonData;
+                    } catch (parseError) {
+                        console.error("Failed to parse Gemini JSON response:", parseError, "Raw response:", textResponse);
+                        return { error: true, error_message: "AI response was not valid JSON. Raw: " + textResponse.substring(0,100) + "..."};
+                    }
+                } else if (data.promptFeedback && data.promptFeedback.blockReason) {
+                     console.warn("Gemini API call blocked:", data.promptFeedback);
+                     return { error: true, error_message: `Request blocked by AI: ${data.promptFeedback.blockReason}. Safety: ${JSON.stringify(data.promptFeedback.safetyRatings)}` };
+                }
+                else {
+                    console.warn("Gemini response missing expected content:", data);
+                    return { error: true, error_message: "AI response structure was unexpected." };
+                }
+            } catch (error) {
+                console.error("Error in fetchNutritionFromGemini:", error);
+                throw error; // Re-throw to be caught by the caller
+            }
+        }
+
+        function addFoodToMeal(mealId, foodItem) {
+            // Ensure all nutrient keys exist, default to 0 if not provided
+            const sanitizedFoodItem = { query: foodItem.query, food_name: foodItem.food_name || foodItem.query };
+            nutrientKeys.forEach(key => {
+                sanitizedFoodItem[key] = Number(foodItem[key]) || 0;
+            });
+
+            dailyData[mealId].push(sanitizedFoodItem);
+            renderMealItems(mealId);
+            updateMealTotals(mealId);
+            updateOverallTotals();
+            saveDailyData();
+        }
+
+        function deleteFoodItem(mealId, itemIndex) {
+            dailyData[mealId].splice(itemIndex, 1);
+            renderMealItems(mealId);
+            updateMealTotals(mealId);
+            updateOverallTotals();
+            saveDailyData();
+        }
+
+        // --- Rendering Functions ---
+        function renderMealItems(mealId) {
+            const mealSection = document.getElementById(mealId);
+            const tbody = mealSection.querySelector('tbody');
+            tbody.innerHTML = ''; // Clear existing items
+
+            dailyData[mealId].forEach((item, index) => {
+                const row = tbody.insertRow();
+                row.classList.add('border-b', 'hover:bg-gray-50');
+
+                // Food Name
+                let cell = row.insertCell();
+                cell.className = 'px-4 py-3 font-medium text-gray-900 whitespace-nowrap';
+                cell.innerHTML = `<span class="table-cell-label">Food:</span>${item.food_name || item.query}`;
+
+                // Nutrient Values
+                nutrientKeys.forEach((key, i) => {
+                    cell = row.insertCell();
+                    cell.className = 'px-4 py-3 text-right';
+                    cell.innerHTML = `<span class="table-cell-label">${nutrientDisplayLabels[i]}:</span>${(Number(item[key]) || 0).toFixed(1)}`;
+                });
+
+                // Action Button
+                cell = row.insertCell();
+                cell.className = 'px-4 py-3 text-center';
+                const deleteBtn = document.createElement('button');
+                deleteBtn.innerHTML = '×'; // A simple 'x'
+                deleteBtn.className = 'text-red-500 hover:text-red-700 font-bold text-lg';
+                deleteBtn.title = "Delete item";
+                deleteBtn.onclick = () => deleteFoodItem(mealId, index);
+                cell.appendChild(deleteBtn);
+            });
+        }
+
+        function updateMealTotals(mealId) {
+            const mealSection = document.getElementById(mealId);
+            const totalsRow = mealSection.querySelector('.totals-row');
+            const currentMealTotals = dailyTotals[mealId];
+
+            // Reset current meal totals before recalculating
+            nutrientKeys.forEach(key => currentMealTotals[key] = 0);
+
+            dailyData[mealId].forEach(item => {
+                nutrientKeys.forEach(key => {
+                    currentMealTotals[key] += (Number(item[key]) || 0);
+                });
+            });
+
+            // Update DOM for meal totals
+            const cells = totalsRow.cells; // cells[0] is "Total" label
+            nutrientKeys.forEach((key, i) => {
+                cells[i + 1].textContent = currentMealTotals[key].toFixed(1);
+            });
+        }
+
+        function updateOverallTotals() {
+            const overall = Object.fromEntries(nutrientKeys.map(k => [k, 0]));
+            Object.values(dailyTotals).forEach(mealTotal => {
+                nutrientKeys.forEach(key => {
+                    overall[key] += (Number(mealTotal[key]) || 0);
+                });
+            });
+
+            const cells = overallTotalsRow.cells;
+            nutrientKeys.forEach((key, i) => {
+                cells[i].textContent = overall[key].toFixed(1);
+            });
+        }
+
+        function renderAllMeals() {
+            mealSections.forEach(section => renderMealItems(section.id));
+        }
+
+        function updateAllTotals() {
+            mealSections.forEach(section => updateMealTotals(section.id));
+            updateOverallTotals();
+        }
+
+        // --- Local Storage & Initialization ---
+        function saveDailyData() {
+            localStorage.setItem('dailyFoodData', JSON.stringify(dailyData));
+        }
+
+        function loadDailyData() {
+            const savedData = localStorage.getItem('dailyFoodData');
+            if (savedData) {
+                const parsedData = JSON.parse(savedData);
+                // Ensure all meal keys exist in dailyData from the start
+                mealSections.forEach(section => {
+                    dailyData[section.id] = parsedData[section.id] || [];
+                });
+            } else {
+                initializeTrackerData(); // Set up empty structure if nothing saved
+            }
+        }
+        
+        function initializeTrackerData() {
+             mealSections.forEach(section => {
+                dailyData[section.id] = [];
+                dailyTotals[section.id] = Object.fromEntries(nutrientKeys.map(k => [k, 0]));
+            });
+        }
+
+
+        function initializeAppWithKey() {
+            const storedKey = localStorage.getItem('geminiApiKey');
+            if (storedKey) {
+                GEMINI_API_KEY = storedKey;
+                apiKeyInput.value = storedKey; // Pre-fill if found
+                trackerAppDiv.classList.remove('hidden');
+                apiKeyInput.parentElement.classList.add('hidden');
+                showMessage("API Key loaded. Tracker is ready.", "success", generalMessageDiv);
+                initializeTracker();
+            } else {
+                trackerAppDiv.classList.add('hidden');
+                apiKeyInput.parentElement.classList.remove('hidden');
+                showMessage("Please enter and save your Google Gemini API Key to begin.", "info", generalMessageDiv);
+            }
+        }
+
+        function initializeTracker() {
+            initializeTrackerData(); // Ensure structures are set up
+            loadDailyData();
+            renderAllMeals();
+            updateAllTotals();
+        }
+        
+        // --- Utility ---
+        function showMessage(message, type = "info", element = generalMessageDiv) {
+            element.textContent = message;
+            element.classList.remove('hidden', 'text-red-600', 'bg-red-100', 'border-red-400', 'text-green-600', 'bg-green-100', 'border-green-400', 'text-blue-600', 'bg-blue-100', 'border-blue-400');
+            if (type === "error") {
+                element.classList.add('text-red-600', 'bg-red-100', 'border-red-400');
+            } else if (type === "success") {
+                element.classList.add('text-green-600', 'bg-green-100', 'border-green-400');
+            } else { // info
+                element.classList.add('text-blue-600', 'bg-blue-100', 'border-blue-400');
+            }
+            setTimeout(() => { element.classList.add('hidden')}, 5000); // Auto-hide after 5s
+        }
+
+
+        // --- Initial Load ---
+        initializeAppWithKey();
+
+    </script>
 </body>
 </html>
