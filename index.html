@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Calorie Tracker</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Calorie Tracker</h1>
+
+  <!-- Meals: Breakfast, Lunch, Snacks, Dinner -->
+  <div id="meals">
+    <div class="meal" id="breakfast">
+      <h2>Breakfast</h2>
+      <input type="text" placeholder="Enter food item" class="food-input">
+      <button onclick="addFood('breakfast')">Add</button>
+      <table>
+        <thead>
+          <tr><th>Food</th><th>Calories</th><th>Protein</th><th>Carbs</th><th>Fat</th><th>Sugar</th></tr>
+        </thead>
+        <tbody></tbody>
+        <tfoot>
+          <tr class="totals">
+            <td>Total</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <!-- Repeat for lunch, snacks, dinner -->
+    <div class="meal" id="lunch">
+      <h2>Lunch</h2>
+      <input type="text" placeholder="Enter food item" class="food-input">
+      <button onclick="addFood('lunch')">Add</button>
+      <table>
+        <thead>
+          <tr><th>Food</th><th>Calories</th><th>Protein</th><th>Carbs</th><th>Fat</th><th>Sugar</th></tr>
+        </thead>
+        <tbody></tbody>
+        <tfoot>
+          <tr class="totals">
+            <td>Total</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <div class="meal" id="snacks">
+      <h2>Snacks</h2>
+      <input type="text" placeholder="Enter food item" class="food-input">
+      <button onclick="addFood('snacks')">Add</button>
+      <table>
+        <thead>
+          <tr><th>Food</th><th>Calories</th><th>Protein</th><th>Carbs</th><th>Fat</th><th>Sugar</th></tr>
+        </thead>
+        <tbody></tbody>
+        <tfoot>
+          <tr class="totals">
+            <td>Total</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <div class="meal" id="dinner">
+      <h2>Dinner</h2>
+      <input type="text" placeholder="Enter food item" class="food-input">
+      <button onclick="addFood('dinner')">Add</button>
+      <table>
+        <thead>
+          <tr><th>Food</th><th>Calories</th><th>Protein</th><th>Carbs</th><th>Fat</th><th>Sugar</th></tr>
+        </thead>
+        <tbody></tbody>
+        <tfoot>
+          <tr class="totals">
+            <td>Total</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+  <h2>Overall Total</h2>
+  <table>
+    <thead>
+      <tr><th>Calories</th><th>Protein</th><th>Carbs</th><th>Fat</th><th>Sugar</th></tr>
+    </thead>
+    <tbody>
+      <tr id="overall">
+        <td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <script src="script.js"></script>
+</body>
+</html>
