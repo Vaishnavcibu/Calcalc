@@ -82,8 +82,8 @@
         }
     </style>
 </head>
-<body class="bg-gradient-to-br from-indigo-100 to-purple-200 min-h-screen py-6 sm:py-8 px-2 sm:px-4">
-    <div class="container mx-auto max-w-5xl"> <!-- Slightly wider max container for larger screens -->
+<body class="bg-gradient-to-br from-indigo-100 to-purple-200 min-h-screen py-6 sm:py-8 px-2 sm:px-4 flex flex-col">
+    <div class="container mx-auto max-w-5xl flex-grow"> <!-- Added flex-grow to push footer down -->
         <header class="text-center mb-8 md:mb-10">
             <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold text-indigo-700">
                 AI Nutrition Tracker
@@ -247,7 +247,25 @@
 
         <!-- General Message Area -->
         <div id="generalMessage" class="mt-6 p-3 sm:p-4 text-center text-red-600 bg-red-100 border border-red-400 rounded-md hidden text-xs sm:text-sm"></div>
-    </div>
+
+    </div> <!-- End of main content container -->
+
+    <!-- New Footer Section -->
+    <footer class="text-center py-6 text-xs sm:text-sm text-gray-600 border-t border-gray-300 bg-gray-100">
+        <div class="container mx-auto max-w-5xl">
+            <p class="mb-1">
+                Copyright © <span id="currentYear"></span> Floworks. All Rights Reserved.
+            </p>
+            <p>
+                Designed & Developed by
+                <a href="https://github.com/Vaishnavcibu" target="_blank" rel="noopener noreferrer" class="text-indigo-600 hover:text-indigo-800 hover:underline font-semibold">
+                    Vaishnav Cibu
+                </a>
+            </p>
+        </div>
+    </footer>
+    <!-- End of New Footer Section -->
+
 
     <script>
         // --- Configuration ---
@@ -595,8 +613,16 @@
             setTimeout(() => { element.classList.add('hidden')}, 6000); // Auto-hide after 6s
         }
 
-        // --- Initial Load ---
-        initializeAppWithKey();
+        // --- Initial Load & Footer Year ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeAppWithKey();
+
+            // Set current year in footer
+            const yearSpan = document.getElementById('currentYear');
+            if (yearSpan) {
+                yearSpan.textContent = new Date().getFullYear();
+            }
+        });
 
     </script>
 </body>
