@@ -17,210 +17,248 @@
             animation: spin 1s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .table-cell-label { display: none; }
-        @media (max-width: 768px) {
-            table thead { display: none; }
-            table tbody tr {
+
+        /* Enhanced Table Responsiveness for older/various devices */
+        @media (max-width: 768px) { /* md breakpoint in Tailwind */
+            .responsive-table thead {
+                display: none;
+            }
+
+            .responsive-table tbody tr,
+            .responsive-table tfoot tr { /* Apply similar styling to tfoot tr */
                 display: block;
                 margin-bottom: 1rem;
-                border: 1px solid #e5e7eb;
-                border-radius: 0.375rem;
-                padding: 0.5rem;
+                border: 1px solid #e5e7eb; /* Tailwind gray-200 */
+                border-radius: 0.5rem; /* Tailwind rounded-lg */
+                padding: 0.75rem; /* Tailwind p-3 */
+                box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); /* Tailwind shadow-md */
             }
-            table tbody td {
+            .responsive-table tfoot tr {
+                background-color: #f9fafb; /* Match tfoot desktop bg (Tailwind bg-gray-50) */
+            }
+
+
+            .responsive-table tbody td,
+            .responsive-table tfoot td { /* Apply similar styling to tfoot td */
                 display: block;
                 text-align: right;
-                padding-left: 50%;
+                padding-left: 50%; /* Make space for the label */
                 position: relative;
-                font-size: 0.875rem;
+                font-size: 0.875rem; /* text-sm */
+                line-height: 1.5;
+                padding-top: 0.375rem;
+                padding-bottom: 0.375rem;
             }
-            table tbody td .table-cell-label {
-                display: inline-block;
+            .responsive-table tfoot td {
+                font-weight: 600; /* Make total values bold */
+            }
+
+            .responsive-table tbody td::before,
+            .responsive-table tfoot td::before { /* Apply ::before labels to tfoot td */
+                content: attr(data-label); /* Use data-label attribute */
                 position: absolute;
-                left: 0.5rem;
+                left: 0.75rem;
                 font-weight: 600;
-                color: #4b5563;
+                color: #4b5563; /* Tailwind gray-600 */
+                white-space: nowrap;
             }
-            table tbody td:last-child { padding-bottom: 0.5rem; }
+
+            /* Special handling for the first 'Total' cell in tfoot */
+            .responsive-table tfoot td:first-child {
+                padding-left: 0.75rem; /* No 50% padding needed, align left */
+                text-align: left;
+                font-size: 1rem; /* text-base, slightly larger for "Total" header */
+                color: #1f2937; /* Tailwind gray-800 */
+                font-weight: 700; /* Extra bold for the "Total" label itself */
+            }
+            .responsive-table tfoot td:first-child::before {
+                content: ""; /* No ::before pseudo-label for the first cell, its content is the label */
+            }
+
+            /* Hide the last 'Action' cell in tfoot for mobile, as it's not needed */
+            .responsive-table tfoot td:last-child {
+                display: none;
+            }
         }
     </style>
 </head>
-<body class="bg-gradient-to-br from-indigo-100 to-purple-200 min-h-screen py-8 px-4">
-    <div class="container mx-auto max-w-4xl">
-        <header class="text-center mb-10">
-            <h1 class="text-4xl md:text-5xl font-extrabold text-indigo-700">
+<body class="bg-gradient-to-br from-indigo-100 to-purple-200 min-h-screen py-6 sm:py-8 px-2 sm:px-4">
+    <div class="container mx-auto max-w-5xl"> <!-- Slightly wider max container for larger screens -->
+        <header class="text-center mb-8 md:mb-10">
+            <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold text-indigo-700">
                 AI Nutrition Tracker
             </h1>
-            <p class="text-gray-600 mt-2 text-lg">
+            <p class="text-gray-600 mt-2 text-base sm:text-lg">
                 Track your meals with intelligent nutrition lookup by Gemini.
             </p>
         </header>
 
         <!-- API Key Input - CRITICAL WARNING -->
-        <div class="mb-8 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 rounded-md shadow">
-            <h3 class="font-bold text-lg">Important: API Key</h3>
-            <p class="text-sm">
-                Enter your Google Gemini API Key below.
-                <strong>WARNING:</strong> This key will be used directly in your browser and is visible in the code.
-                For personal use/testing only. Do NOT deploy this publicly with a real API key.
+        <div id="apiKeySection" class="mb-8 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 rounded-md shadow-md">
+            <h3 class="font-bold text-md sm:text-lg">Important: API Key</h3>
+            <p class="text-xs sm:text-sm">
+                Enter your Google Gemini API Key.
+                <strong>WARNING:</strong> This key is used directly in your browser.
+                For personal use/testing only. Not for public deployment.
             </p>
             <input type="password" id="apiKeyInput" placeholder="Enter your Gemini API Key"
-                   class="mt-2 w-full p-2 border border-yellow-400 rounded-md focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500">
-            <button id="saveApiKeyButton" class="mt-2 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded-md text-sm">
+                   class="mt-2 w-full p-2 text-sm sm:text-base border border-yellow-400 rounded-md focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500">
+            <button id="saveApiKeyButton" class="mt-2 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-3 sm:px-4 rounded-md text-xs sm:text-sm">
                 Save Key
             </button>
         </div>
 
         <div id="trackerApp" class="hidden">
             <!-- Meal Sections -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-8 md:mb-10">
                 <!-- Breakfast -->
-                <div class="meal-section bg-white p-6 rounded-xl shadow-lg" id="breakfast">
-                    <h2 class="text-2xl font-bold text-indigo-600 mb-4">Breakfast</h2>
-                    <div class="flex gap-2 mb-4">
-                        <input type="text" class="food-input flex-grow p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500" placeholder="e.g., 2 idlis with sambar">
-                        <button class="add-food-btn bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-5 rounded-lg flex items-center justify-center">
+                <div class="meal-section bg-white p-4 sm:p-6 rounded-xl shadow-lg" id="breakfast">
+                    <h2 class="text-xl sm:text-2xl font-bold text-indigo-600 mb-4">Breakfast</h2>
+                    <div class="flex flex-col sm:flex-row gap-2 mb-4">
+                        <input type="text" class="food-input flex-grow p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm sm:text-base" placeholder="e.g., 2 idlis with sambar">
+                        <button class="add-food-btn bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 sm:py-3 sm:px-5 rounded-lg flex items-center justify-center text-sm sm:text-base">
                             <span class="button-text">Add</span>
                             <div class="spinner hidden ml-2"></div>
                         </button>
                     </div>
                     <div class="table-container overflow-x-auto">
-                        <table class="w-full text-sm text-left text-gray-700">
+                        <table class="responsive-table w-full text-xs sm:text-sm text-left text-gray-700">
                             <thead class="text-xs text-gray-700 uppercase bg-gray-100">
                                 <tr>
-                                    <th scope="col" class="px-4 py-3">Food</th>
-                                    <th scope="col" class="px-4 py-3 text-right">Cal</th>
-                                    <th scope="col" class="px-4 py-3 text-right">P(g)</th>
-                                    <th scope="col" class="px-4 py-3 text-right">C(g)</th>
-                                    <th scope="col" class="px-4 py-3 text-right">F(g)</th>
-                                    <th scope="col" class="px-4 py-3 text-right">S(g)</th>
-                                    <th scope="col" class="px-4 py-3 text-center">Action</th>
+                                    <th scope="col" class="px-2 sm:px-4 py-2 sm:py-3">Food</th>
+                                    <th scope="col" class="px-2 sm:px-4 py-2 sm:py-3 text-right">Cal</th>
+                                    <th scope="col" class="px-2 sm:px-4 py-2 sm:py-3 text-right">P(g)</th>
+                                    <th scope="col" class="px-2 sm:px-4 py-2 sm:py-3 text-right">C(g)</th>
+                                    <th scope="col" class="px-2 sm:px-4 py-2 sm:py-3 text-right">F(g)</th>
+                                    <th scope="col" class="px-2 sm:px-4 py-2 sm:py-3 text-right">S(g)</th>
+                                    <th scope="col" class="px-2 sm:px-4 py-2 sm:py-3 text-center">Action</th>
                                 </tr>
                             </thead>
                             <tbody> <!-- Items will be added here --> </tbody>
                             <tfoot class="font-semibold text-gray-800 bg-gray-50">
                                 <tr class="totals-row">
-                                    <td class="px-4 py-2">Total</td>
-                                    <td class="px-4 py-2 text-right">0</td>
-                                    <td class="px-4 py-2 text-right">0</td>
-                                    <td class="px-4 py-2 text-right">0</td>
-                                    <td class="px-4 py-2 text-right">0</td>
-                                    <td class="px-4 py-2 text-right">0</td>
-                                    <td class="px-4 py-2"></td>
+                                    <td data-label="Total" class="px-2 sm:px-4 py-2">Total</td>
+                                    <td data-label="Cal" class="px-2 sm:px-4 py-2 text-right">0</td>
+                                    <td data-label="P(g)" class="px-2 sm:px-4 py-2 text-right">0</td>
+                                    <td data-label="C(g)" class="px-2 sm:px-4 py-2 text-right">0</td>
+                                    <td data-label="F(g)" class="px-2 sm:px-4 py-2 text-right">0</td>
+                                    <td data-label="S(g)" class="px-2 sm:px-4 py-2 text-right">0</td>
+                                    <td data-label="Action" class="px-2 sm:px-4 py-2"></td>
                                 </tr>
                             </tfoot>
                         </table>
                     </div>
                 </div>
 
-                <!-- Lunch (similar structure) -->
-                <div class="meal-section bg-white p-6 rounded-xl shadow-lg" id="lunch">
-                    <h2 class="text-2xl font-bold text-green-600 mb-4">Lunch</h2>
-                     <div class="flex gap-2 mb-4">
-                        <input type="text" class="food-input flex-grow p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" placeholder="e.g., 1 cup rice with dal">
-                        <button class="add-food-btn bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-5 rounded-lg flex items-center justify-center">
+                <!-- Lunch -->
+                <div class="meal-section bg-white p-4 sm:p-6 rounded-xl shadow-lg" id="lunch">
+                    <h2 class="text-xl sm:text-2xl font-bold text-green-600 mb-4">Lunch</h2>
+                     <div class="flex flex-col sm:flex-row gap-2 mb-4">
+                        <input type="text" class="food-input flex-grow p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 text-sm sm:text-base" placeholder="e.g., 1 cup rice with dal">
+                        <button class="add-food-btn bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 sm:py-3 sm:px-5 rounded-lg flex items-center justify-center text-sm sm:text-base">
                             <span class="button-text">Add</span>
                             <div class="spinner hidden ml-2"></div>
                         </button>
                     </div>
                     <div class="table-container overflow-x-auto">
-                        <table class="w-full text-sm text-left text-gray-700">
+                        <table class="responsive-table w-full text-xs sm:text-sm text-left text-gray-700">
                             <thead class="text-xs text-gray-700 uppercase bg-gray-100">
-                                <tr><th scope="col" class="px-4 py-3">Food</th><th scope="col" class="px-4 py-3 text-right">Cal</th><th scope="col" class="px-4 py-3 text-right">P(g)</th><th scope="col" class="px-4 py-3 text-right">C(g)</th><th scope="col" class="px-4 py-3 text-right">F(g)</th><th scope="col" class="px-4 py-3 text-right">S(g)</th><th scope="col" class="px-4 py-3 text-center">Action</th></tr>
+                                <tr><th scope="col" class="px-2 sm:px-4 py-2 sm:py-3">Food</th><th scope="col" class="px-2 sm:px-4 py-2 sm:py-3 text-right">Cal</th><th scope="col" class="px-2 sm:px-4 py-2 sm:py-3 text-right">P(g)</th><th scope="col" class="px-2 sm:px-4 py-2 sm:py-3 text-right">C(g)</th><th scope="col" class="px-2 sm:px-4 py-2 sm:py-3 text-right">F(g)</th><th scope="col" class="px-2 sm:px-4 py-2 sm:py-3 text-right">S(g)</th><th scope="col" class="px-2 sm:px-4 py-2 sm:py-3 text-center">Action</th></tr>
                             </thead>
                             <tbody></tbody>
-                            <tfoot class="font-semibold text-gray-800 bg-gray-50"><tr class="totals-row"><td class="px-4 py-2">Total</td><td class="px-4 py-2 text-right">0</td><td class="px-4 py-2 text-right">0</td><td class="px-4 py-2 text-right">0</td><td class="px-4 py-2 text-right">0</td><td class="px-4 py-2 text-right">0</td><td class="px-4 py-2"></td></tr></tfoot>
+                            <tfoot class="font-semibold text-gray-800 bg-gray-50"><tr class="totals-row"><td data-label="Total" class="px-2 sm:px-4 py-2">Total</td><td data-label="Cal" class="px-2 sm:px-4 py-2 text-right">0</td><td data-label="P(g)" class="px-2 sm:px-4 py-2 text-right">0</td><td data-label="C(g)" class="px-2 sm:px-4 py-2 text-right">0</td><td data-label="F(g)" class="px-2 sm:px-4 py-2 text-right">0</td><td data-label="S(g)" class="px-2 sm:px-4 py-2 text-right">0</td><td data-label="Action" class="px-2 sm:px-4 py-2"></td></tr></tfoot>
                         </table>
                     </div>
                 </div>
 
-                <!-- Snacks (similar structure) -->
-                <div class="meal-section bg-white p-6 rounded-xl shadow-lg" id="snacks">
-                    <h2 class="text-2xl font-bold text-yellow-500 mb-4">Snacks</h2>
-                    <div class="flex gap-2 mb-4">
-                        <input type="text" class="food-input flex-grow p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500" placeholder="e.g., 1 banana">
-                        <button class="add-food-btn bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-3 px-5 rounded-lg flex items-center justify-center">
+                <!-- Snacks -->
+                <div class="meal-section bg-white p-4 sm:p-6 rounded-xl shadow-lg" id="snacks">
+                    <h2 class="text-xl sm:text-2xl font-bold text-yellow-500 mb-4">Snacks</h2>
+                    <div class="flex flex-col sm:flex-row gap-2 mb-4">
+                        <input type="text" class="food-input flex-grow p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 text-sm sm:text-base" placeholder="e.g., 1 banana">
+                        <button class="add-food-btn bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 sm:py-3 sm:px-5 rounded-lg flex items-center justify-center text-sm sm:text-base">
                             <span class="button-text">Add</span>
                             <div class="spinner hidden ml-2"></div>
                         </button>
                     </div>
                     <div class="table-container overflow-x-auto">
-                       <table class="w-full text-sm text-left text-gray-700">
+                       <table class="responsive-table w-full text-xs sm:text-sm text-left text-gray-700">
                             <thead class="text-xs text-gray-700 uppercase bg-gray-100">
-                                <tr><th scope="col" class="px-4 py-3">Food</th><th scope="col" class="px-4 py-3 text-right">Cal</th><th scope="col" class="px-4 py-3 text-right">P(g)</th><th scope="col" class="px-4 py-3 text-right">C(g)</th><th scope="col" class="px-4 py-3 text-right">F(g)</th><th scope="col" class="px-4 py-3 text-right">S(g)</th><th scope="col" class="px-4 py-3 text-center">Action</th></tr>
+                                <tr><th scope="col" class="px-2 sm:px-4 py-2 sm:py-3">Food</th><th scope="col" class="px-2 sm:px-4 py-2 sm:py-3 text-right">Cal</th><th scope="col" class="px-2 sm:px-4 py-2 sm:py-3 text-right">P(g)</th><th scope="col" class="px-2 sm:px-4 py-2 sm:py-3 text-right">C(g)</th><th scope="col" class="px-2 sm:px-4 py-2 sm:py-3 text-right">F(g)</th><th scope="col" class="px-2 sm:px-4 py-2 sm:py-3 text-right">S(g)</th><th scope="col" class="px-2 sm:px-4 py-2 sm:py-3 text-center">Action</th></tr>
                             </thead>
                             <tbody></tbody>
-                            <tfoot class="font-semibold text-gray-800 bg-gray-50"><tr class="totals-row"><td class="px-4 py-2">Total</td><td class="px-4 py-2 text-right">0</td><td class="px-4 py-2 text-right">0</td><td class="px-4 py-2 text-right">0</td><td class="px-4 py-2 text-right">0</td><td class="px-4 py-2 text-right">0</td><td class="px-4 py-2"></td></tr></tfoot>
+                            <tfoot class="font-semibold text-gray-800 bg-gray-50"><tr class="totals-row"><td data-label="Total" class="px-2 sm:px-4 py-2">Total</td><td data-label="Cal" class="px-2 sm:px-4 py-2 text-right">0</td><td data-label="P(g)" class="px-2 sm:px-4 py-2 text-right">0</td><td data-label="C(g)" class="px-2 sm:px-4 py-2 text-right">0</td><td data-label="F(g)" class="px-2 sm:px-4 py-2 text-right">0</td><td data-label="S(g)" class="px-2 sm:px-4 py-2 text-right">0</td><td data-label="Action" class="px-2 sm:px-4 py-2"></td></tr></tfoot>
                         </table>
                     </div>
                 </div>
 
-                <!-- Dinner (similar structure) -->
-                <div class="meal-section bg-white p-6 rounded-xl shadow-lg" id="dinner">
-                    <h2 class="text-2xl font-bold text-red-500 mb-4">Dinner</h2>
-                    <div class="flex gap-2 mb-4">
-                        <input type="text" class="food-input flex-grow p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500" placeholder="e.g., 2 porotas with chicken curry">
-                        <button class="add-food-btn bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-5 rounded-lg flex items-center justify-center">
+                <!-- Dinner -->
+                <div class="meal-section bg-white p-4 sm:p-6 rounded-xl shadow-lg" id="dinner">
+                    <h2 class="text-xl sm:text-2xl font-bold text-red-500 mb-4">Dinner</h2>
+                    <div class="flex flex-col sm:flex-row gap-2 mb-4">
+                        <input type="text" class="food-input flex-grow p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 text-sm sm:text-base" placeholder="e.g., 2 porotas with chicken curry">
+                        <button class="add-food-btn bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 sm:py-3 sm:px-5 rounded-lg flex items-center justify-center text-sm sm:text-base">
                             <span class="button-text">Add</span>
                             <div class="spinner hidden ml-2"></div>
                         </button>
                     </div>
                     <div class="table-container overflow-x-auto">
-                        <table class="w-full text-sm text-left text-gray-700">
+                        <table class="responsive-table w-full text-xs sm:text-sm text-left text-gray-700">
                             <thead class="text-xs text-gray-700 uppercase bg-gray-100">
-                                <tr><th scope="col" class="px-4 py-3">Food</th><th scope="col" class="px-4 py-3 text-right">Cal</th><th scope="col" class="px-4 py-3 text-right">P(g)</th><th scope="col" class="px-4 py-3 text-right">C(g)</th><th scope="col" class="px-4 py-3 text-right">F(g)</th><th scope="col" class="px-4 py-3 text-right">S(g)</th><th scope="col" class="px-4 py-3 text-center">Action</th></tr>
+                                <tr><th scope="col" class="px-2 sm:px-4 py-2 sm:py-3">Food</th><th scope="col" class="px-2 sm:px-4 py-2 sm:py-3 text-right">Cal</th><th scope="col" class="px-2 sm:px-4 py-2 sm:py-3 text-right">P(g)</th><th scope="col" class="px-2 sm:px-4 py-2 sm:py-3 text-right">C(g)</th><th scope="col" class="px-2 sm:px-4 py-2 sm:py-3 text-right">F(g)</th><th scope="col" class="px-2 sm:px-4 py-2 sm:py-3 text-right">S(g)</th><th scope="col" class="px-2 sm:px-4 py-2 sm:py-3 text-center">Action</th></tr>
                             </thead>
                             <tbody></tbody>
-                            <tfoot class="font-semibold text-gray-800 bg-gray-50"><tr class="totals-row"><td class="px-4 py-2">Total</td><td class="px-4 py-2 text-right">0</td><td class="px-4 py-2 text-right">0</td><td class="px-4 py-2 text-right">0</td><td class="px-4 py-2 text-right">0</td><td class="px-4 py-2 text-right">0</td><td class="px-4 py-2"></td></tr></tfoot>
+                            <tfoot class="font-semibold text-gray-800 bg-gray-50"><tr class="totals-row"><td data-label="Total" class="px-2 sm:px-4 py-2">Total</td><td data-label="Cal" class="px-2 sm:px-4 py-2 text-right">0</td><td data-label="P(g)" class="px-2 sm:px-4 py-2 text-right">0</td><td data-label="C(g)" class="px-2 sm:px-4 py-2 text-right">0</td><td data-label="F(g)" class="px-2 sm:px-4 py-2 text-right">0</td><td data-label="S(g)" class="px-2 sm:px-4 py-2 text-right">0</td><td data-label="Action" class="px-2 sm:px-4 py-2"></td></tr></tfoot>
                         </table>
                     </div>
                 </div>
             </div>
 
             <!-- Overall Totals -->
-            <div class="bg-white p-6 rounded-xl shadow-lg mb-6">
-                <h2 class="text-3xl font-bold text-purple-700 mb-4 text-center">Daily Summary</h2>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-md text-gray-800">
-                        <thead class="text-sm text-purple-700 uppercase bg-purple-50">
+            <div class="bg-white p-4 sm:p-6 rounded-xl shadow-lg mb-6">
+                <h2 class="text-2xl sm:text-3xl font-bold text-purple-700 mb-4 text-center">Daily Summary</h2>
+                <div class="overflow-x-auto"> <!-- Ensure this table can scroll if needed -->
+                    <table class="w-full text-sm sm:text-md text-gray-800">
+                        <thead class="text-xs sm:text-sm text-purple-700 uppercase bg-purple-50">
                             <tr>
-                                <th scope="col" class="px-6 py-3 text-right">Total Calories</th>
-                                <th scope="col" class="px-6 py-3 text-right">Total Protein (g)</th>
-                                <th scope="col" class="px-6 py-3 text-right">Total Carbs (g)</th>
-                                <th scope="col" class="px-6 py-3 text-right">Total Fat (g)</th>
-                                <th scope="col" class="px-6 py-3 text-right">Total Sugar (g)</th>
+                                <th scope="col" class="px-3 sm:px-6 py-3 text-right">Total Calories</th>
+                                <th scope="col" class="px-3 sm:px-6 py-3 text-right">Total Protein (g)</th>
+                                <th scope="col" class="px-3 sm:px-6 py-3 text-right">Total Carbs (g)</th>
+                                <th scope="col" class="px-3 sm:px-6 py-3 text-right">Total Fat (g)</th>
+                                <th scope="col" class="px-3 sm:px-6 py-3 text-right">Total Sugar (g)</th>
                             </tr>
                         </thead>
-                        <tbody class="font-bold text-lg">
+                        <tbody class="font-semibold sm:font-bold text-base sm:text-lg">
                             <tr id="overall-totals-row" class="border-b">
-                                <td class="px-6 py-4 text-right">0</td>
-                                <td class="px-6 py-4 text-right">0</td>
-                                <td class="px-6 py-4 text-right">0</td>
-                                <td class="px-6 py-4 text-right">0</td>
-                                <td class="px-6 py-4 text-right">0</td>
+                                <td class="px-3 sm:px-6 py-3 sm:py-4 text-right">0</td>
+                                <td class="px-3 sm:px-6 py-3 sm:py-4 text-right">0</td>
+                                <td class="px-3 sm:px-6 py-3 sm:py-4 text-right">0</td>
+                                <td class="px-3 sm:px-6 py-3 sm:py-4 text-right">0</td>
+                                <td class="px-3 sm:px-6 py-3 sm:py-4 text-right">0</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
-            <button id="resetDayButton" class="w-full md:w-auto mx-auto block bg-gray-700 hover:bg-gray-800 text-white font-semibold py-3 px-6 rounded-lg">
+            <button id="resetDayButton" class="w-full sm:w-auto mx-auto block bg-gray-700 hover:bg-gray-800 text-white font-semibold py-2 px-4 sm:py-3 sm:px-6 rounded-lg text-sm sm:text-base">
                 Reset Day
             </button>
         </div> <!-- End of trackerApp -->
 
         <!-- General Message Area -->
-        <div id="generalMessage" class="mt-6 p-4 text-center text-red-600 bg-red-100 border border-red-400 rounded-md hidden"></div>
+        <div id="generalMessage" class="mt-6 p-3 sm:p-4 text-center text-red-600 bg-red-100 border border-red-400 rounded-md hidden text-xs sm:text-sm"></div>
     </div>
 
     <script>
         // --- Configuration ---
         const GEMINI_API_ENDPOINT_BASE = 'https://generativelanguage.googleapis.com/v1beta/models/';
-        // You can change 'gemini-1.5-flash-latest' to 'gemini-pro' or other compatible models
-        const GEMINI_MODEL = 'gemini-1.5-flash-latest'; // Flash is faster and cheaper for this kind of task
-        let GEMINI_API_KEY = ''; // To be set by user
+        const GEMINI_MODEL = 'gemini-1.5-flash-latest';
+        let GEMINI_API_KEY = '';
 
         const nutrientKeys = ['calories', 'protein_g', 'carbohydrates_total_g', 'fat_total_g', 'sugar_g'];
-        const nutrientDisplayLabels = ['Cal', 'P(g)', 'C(g)', 'F(g)', 'S(g)']; // For mobile table labels
+        // For data-label attributes in TD elements for mobile view
+        const nutrientDataLabels = ['Calories', 'Protein (g)', 'Carbs (g)', 'Fat (g)', 'Sugar (g)'];
+
 
         // --- DOM Elements ---
         const apiKeyInput = document.getElementById('apiKeyInput');
@@ -230,12 +268,11 @@
         const mealSections = document.querySelectorAll('.meal-section');
         const overallTotalsRow = document.getElementById('overall-totals-row');
         const resetDayButton = document.getElementById('resetDayButton');
+        const apiKeySection = document.getElementById('apiKeySection');
 
         // --- State ---
-        let dailyData = {
-            // breakfast: [], lunch: [], snacks: [], dinner: [] ... meals will be populated dynamically
-        };
-        let dailyTotals = {}; // Will store totals for each meal and overall
+        let dailyData = {};
+        let dailyTotals = {};
 
         // --- Event Listeners ---
         saveApiKeyButton.addEventListener('click', () => {
@@ -244,7 +281,7 @@
                 GEMINI_API_KEY = key;
                 localStorage.setItem('geminiApiKey', key);
                 trackerAppDiv.classList.remove('hidden');
-                apiKeyInput.parentElement.classList.add('hidden'); // Hide API key input section
+                apiKeySection.classList.add('hidden');
                 showMessage("API Key saved. You can now use the tracker.", "success", generalMessageDiv);
                 initializeTracker();
             } else {
@@ -254,8 +291,7 @@
 
         mealSections.forEach(section => {
             const mealId = section.id;
-            dailyData[mealId] = []; // Initialize meal data array
-            dailyTotals[mealId] = Object.fromEntries(nutrientKeys.map(k => [k, 0])); // Initialize meal totals
+            // Initialization moved to initializeTrackerData
 
             const addButton = section.querySelector('.add-food-btn');
             const foodInput = section.querySelector('.food-input');
@@ -280,8 +316,8 @@
                 try {
                     const nutritionData = await fetchNutritionFromGemini(query);
                     if (nutritionData && !nutritionData.error) {
-                        addFoodToMeal(mealId, { ...nutritionData, query }); // Save original query too
-                        foodInput.value = ''; // Clear input
+                        addFoodToMeal(mealId, { ...nutritionData, query });
+                        foodInput.value = '';
                         showMessage(`Added ${nutritionData.food_name || query} to ${mealId}.`, "success", generalMessageDiv);
                     } else {
                         let errorMsg = "Could not get nutrition data. ";
@@ -304,7 +340,7 @@
         resetDayButton.addEventListener('click', () => {
             if (confirm("Are you sure you want to reset all data for the day?")) {
                 localStorage.removeItem('dailyFoodData');
-                initializeTrackerData();
+                initializeTrackerData(); // Re-initialize data structures
                 renderAllMeals();
                 updateAllTotals();
                 showMessage("Tracker has been reset.", "success", generalMessageDiv);
@@ -328,7 +364,7 @@
                 If you cannot find specific data or the query is ambiguous, respond with:
                 {
                   "error": true,
-                  "error_message": "Could not find specific data for [foodQuery]. Please try being more specific or check spelling."
+                  "error_message": "Could not find specific data for '${foodQuery}'. Please try being more specific or check spelling."
                 }
                 Ensure all nutrient values are numbers. If a nutrient is not applicable or zero, use 0.
                 Do not include any text outside of the JSON structure.
@@ -337,8 +373,7 @@
             const requestBody = {
                 contents: [{ parts: [{ text: prompt }] }],
                 generationConfig: {
-                    // responseMimeType: "application/json", // This is ideal but might not be supported by all Gemini models/endpoints directly
-                    temperature: 0.2 // Lower temperature for more factual, less creative responses
+                    temperature: 0.2
                 }
             };
 
@@ -350,23 +385,23 @@
                 });
 
                 if (!response.ok) {
-                    const errorData = await response.json();
+                    const errorData = await response.json().catch(() => ({ error: { message: "Unknown API error format."}})); // Catch if error response itself isn't JSON
                     console.error("Gemini API Error Response:", errorData);
-                    throw new Error(`Gemini API request failed: ${response.status} ${response.statusText}. ${errorData.error?.message || ''}`);
+                    throw new Error(`Gemini API request failed: ${response.status} ${response.statusText}. ${errorData.error?.message || 'Details unavailable.'}`);
                 }
 
                 const data = await response.json();
 
                 if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0].text) {
                     let textResponse = data.candidates[0].content.parts[0].text;
-                    // Attempt to clean and parse the JSON
                     try {
-                        // Gemini might sometimes wrap JSON in markdown backticks
                         textResponse = textResponse.replace(/^```json\s*|```\s*$/g, '').trim();
                         const jsonData = JSON.parse(textResponse);
-                        // Validate required fields (simple validation)
-                        if (jsonData.error) return jsonData; // Return error object from Gemini as is
-                        if (typeof jsonData.calories !== 'number') throw new Error("Invalid JSON structure: 'calories' missing or not a number.");
+                        if (jsonData.error) return jsonData;
+                        if (typeof jsonData.calories !== 'number' || typeof jsonData.protein_g !== 'number' || typeof jsonData.carbohydrates_total_g !== 'number' || typeof jsonData.fat_total_g !== 'number' || typeof jsonData.sugar_g !== 'number' ) {
+                            // Return an error if essential numeric fields are missing or not numbers
+                             return { error: true, error_message: "AI response was valid JSON but missed required numeric nutrient fields. Raw: " + textResponse.substring(0,100) + "..."};
+                        }
                         return jsonData;
                     } catch (parseError) {
                         console.error("Failed to parse Gemini JSON response:", parseError, "Raw response:", textResponse);
@@ -375,19 +410,17 @@
                 } else if (data.promptFeedback && data.promptFeedback.blockReason) {
                      console.warn("Gemini API call blocked:", data.promptFeedback);
                      return { error: true, error_message: `Request blocked by AI: ${data.promptFeedback.blockReason}. Safety: ${JSON.stringify(data.promptFeedback.safetyRatings)}` };
-                }
-                else {
-                    console.warn("Gemini response missing expected content:", data);
-                    return { error: true, error_message: "AI response structure was unexpected." };
+                } else {
+                    console.warn("Gemini response missing expected content structure:", data);
+                    return { error: true, error_message: "AI response structure was unexpected. Check console for details." };
                 }
             } catch (error) {
                 console.error("Error in fetchNutritionFromGemini:", error);
-                throw error; // Re-throw to be caught by the caller
+                throw error;
             }
         }
 
         function addFoodToMeal(mealId, foodItem) {
-            // Ensure all nutrient keys exist, default to 0 if not provided
             const sanitizedFoodItem = { query: foodItem.query, food_name: foodItem.food_name || foodItem.query };
             nutrientKeys.forEach(key => {
                 sanitizedFoodItem[key] = Number(foodItem[key]) || 0;
@@ -412,30 +445,30 @@
         function renderMealItems(mealId) {
             const mealSection = document.getElementById(mealId);
             const tbody = mealSection.querySelector('tbody');
-            tbody.innerHTML = ''; // Clear existing items
+            tbody.innerHTML = '';
 
             dailyData[mealId].forEach((item, index) => {
                 const row = tbody.insertRow();
                 row.classList.add('border-b', 'hover:bg-gray-50');
 
-                // Food Name
                 let cell = row.insertCell();
-                cell.className = 'px-4 py-3 font-medium text-gray-900 whitespace-nowrap';
-                cell.innerHTML = `<span class="table-cell-label">Food:</span>${item.food_name || item.query}`;
+                cell.className = 'px-2 sm:px-4 py-2 sm:py-3 font-medium text-gray-900 whitespace-nowrap';
+                cell.setAttribute('data-label', 'Food:');
+                cell.textContent = item.food_name || item.query;
 
-                // Nutrient Values
                 nutrientKeys.forEach((key, i) => {
                     cell = row.insertCell();
-                    cell.className = 'px-4 py-3 text-right';
-                    cell.innerHTML = `<span class="table-cell-label">${nutrientDisplayLabels[i]}:</span>${(Number(item[key]) || 0).toFixed(1)}`;
+                    cell.className = 'px-2 sm:px-4 py-2 sm:py-3 text-right';
+                    cell.setAttribute('data-label', nutrientDataLabels[i] + ':'); // Use descriptive labels for mobile
+                    cell.textContent = (Number(item[key]) || 0).toFixed(1);
                 });
 
-                // Action Button
                 cell = row.insertCell();
-                cell.className = 'px-4 py-3 text-center';
+                cell.className = 'px-2 sm:px-4 py-2 sm:py-3 text-center';
+                cell.setAttribute('data-label', 'Action:');
                 const deleteBtn = document.createElement('button');
-                deleteBtn.innerHTML = '×'; // A simple 'x'
-                deleteBtn.className = 'text-red-500 hover:text-red-700 font-bold text-lg';
+                deleteBtn.innerHTML = '×';
+                deleteBtn.className = 'text-red-500 hover:text-red-700 font-bold text-lg px-1'; // Added padding for easier touch
                 deleteBtn.title = "Delete item";
                 deleteBtn.onclick = () => deleteFoodItem(mealId, index);
                 cell.appendChild(deleteBtn);
@@ -447,7 +480,6 @@
             const totalsRow = mealSection.querySelector('.totals-row');
             const currentMealTotals = dailyTotals[mealId];
 
-            // Reset current meal totals before recalculating
             nutrientKeys.forEach(key => currentMealTotals[key] = 0);
 
             dailyData[mealId].forEach(item => {
@@ -456,8 +488,7 @@
                 });
             });
 
-            // Update DOM for meal totals
-            const cells = totalsRow.cells; // cells[0] is "Total" label
+            const cells = totalsRow.cells;
             nutrientKeys.forEach((key, i) => {
                 cells[i + 1].textContent = currentMealTotals[key].toFixed(1);
             });
@@ -478,11 +509,15 @@
         }
 
         function renderAllMeals() {
-            mealSections.forEach(section => renderMealItems(section.id));
+            mealSections.forEach(section => {
+                if (dailyData[section.id]) renderMealItems(section.id);
+            });
         }
 
         function updateAllTotals() {
-            mealSections.forEach(section => updateMealTotals(section.id));
+            mealSections.forEach(section => {
+                 if (dailyTotals[section.id]) updateMealTotals(section.id);
+            });
             updateOverallTotals();
         }
 
@@ -493,62 +528,72 @@
 
         function loadDailyData() {
             const savedData = localStorage.getItem('dailyFoodData');
+            // Ensure dailyData is an object before trying to assign to its properties
+            if (!dailyData || typeof dailyData !== 'object') {
+                dailyData = {};
+            }
+
             if (savedData) {
                 const parsedData = JSON.parse(savedData);
-                // Ensure all meal keys exist in dailyData from the start
                 mealSections.forEach(section => {
                     dailyData[section.id] = parsedData[section.id] || [];
                 });
             } else {
-                initializeTrackerData(); // Set up empty structure if nothing saved
+                // If no saved data, ensure each meal has an empty array
+                mealSections.forEach(section => {
+                    dailyData[section.id] = [];
+                });
             }
         }
-        
+
         function initializeTrackerData() {
-             mealSections.forEach(section => {
-                dailyData[section.id] = [];
-                dailyTotals[section.id] = Object.fromEntries(nutrientKeys.map(k => [k, 0]));
+            dailyData = {}; // Reset or initialize
+            dailyTotals = {}; // Reset or initialize
+            mealSections.forEach(section => {
+                const mealId = section.id;
+                dailyData[mealId] = [];
+                dailyTotals[mealId] = Object.fromEntries(nutrientKeys.map(k => [k, 0]));
             });
         }
-
 
         function initializeAppWithKey() {
             const storedKey = localStorage.getItem('geminiApiKey');
             if (storedKey) {
                 GEMINI_API_KEY = storedKey;
-                apiKeyInput.value = storedKey; // Pre-fill if found
+                apiKeyInput.value = storedKey;
                 trackerAppDiv.classList.remove('hidden');
-                apiKeyInput.parentElement.classList.add('hidden');
+                apiKeySection.classList.add('hidden');
                 showMessage("API Key loaded. Tracker is ready.", "success", generalMessageDiv);
                 initializeTracker();
             } else {
                 trackerAppDiv.classList.add('hidden');
-                apiKeyInput.parentElement.classList.remove('hidden');
+                apiKeySection.classList.remove('hidden');
                 showMessage("Please enter and save your Google Gemini API Key to begin.", "info", generalMessageDiv);
             }
         }
 
         function initializeTracker() {
-            initializeTrackerData(); // Ensure structures are set up
+            initializeTrackerData();
             loadDailyData();
             renderAllMeals();
             updateAllTotals();
         }
-        
+
         // --- Utility ---
         function showMessage(message, type = "info", element = generalMessageDiv) {
             element.textContent = message;
-            element.classList.remove('hidden', 'text-red-600', 'bg-red-100', 'border-red-400', 'text-green-600', 'bg-green-100', 'border-green-400', 'text-blue-600', 'bg-blue-100', 'border-blue-400');
-            if (type === "error") {
-                element.classList.add('text-red-600', 'bg-red-100', 'border-red-400');
-            } else if (type === "success") {
-                element.classList.add('text-green-600', 'bg-green-100', 'border-green-400');
-            } else { // info
-                element.classList.add('text-blue-600', 'bg-blue-100', 'border-blue-400');
-            }
-            setTimeout(() => { element.classList.add('hidden')}, 5000); // Auto-hide after 5s
-        }
+            element.className = 'mt-6 p-3 sm:p-4 text-center rounded-md text-xs sm:text-sm'; // Base classes
+            element.classList.remove('hidden');
 
+            if (type === "error") {
+                element.classList.add('text-red-700', 'bg-red-100', 'border', 'border-red-400');
+            } else if (type === "success") {
+                element.classList.add('text-green-700', 'bg-green-100', 'border', 'border-green-400');
+            } else { // info
+                element.classList.add('text-blue-700', 'bg-blue-100', 'border', 'border-blue-400');
+            }
+            setTimeout(() => { element.classList.add('hidden')}, 6000); // Auto-hide after 6s
+        }
 
         // --- Initial Load ---
         initializeAppWithKey();
